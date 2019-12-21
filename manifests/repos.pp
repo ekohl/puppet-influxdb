@@ -14,9 +14,7 @@ class influxdb::repos (
     /(?i:debian|devuan|ubuntu)/: {
       case $::lsbdistcodename {
         /(buster|n\/a)/   : {
-          if !defined(Class['apt']) {
-            include apt
-          }
+          include apt
 
           apt::source { 'influxdb':
             ensure   => present,
@@ -27,9 +25,7 @@ class influxdb::repos (
           }
         }
         default : {
-          if !defined(Class['apt']) {
-            include apt
-          }
+          include apt
 
           apt::source { 'influxdb':
             ensure   => present,

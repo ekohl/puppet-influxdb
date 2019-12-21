@@ -42,24 +42,17 @@ class influxdb::repos (
       }
     }
     /(?i:centos|fedora|redhat)/: {
-      file { '/etc/yum.repos.d/influxdb.repo':
-        ensure  => present,
-        backup  => true,
-        content => template('influxdb/influxdb.repo.erb'),
-        owner   => 'root',
-        group   => 'root',
-        mode    => '0644',
-      }
-
-      exec { 'influxdb yum update':
-        command   => 'yum update -q -y',
-        path      => [ '/usr/bin', '/usr/sbin', '/bin', '/sbin' ],
-        subscribe => File['/etc/yum.repos.d/influxdb.repo'],
+      yumrepo { 'influxdb':
+        ensure   => present,
+        name     => 'InfluxDB',
+        baseurl  => 'https://repos.influxdata.com/centos/$releasever/$basearch/stable',
+        enabled  => true,
+        gpgcheck => true,
+        gpgkey   => 'https://repos.influxdata.com/influxdb.key',
       }
     }
     default                    : {
-      fail("Module ${module_name} \
-      is not supported on ${::operatingsystem}")
+      fail("Module ${module_name} is not supported on ${::operatingsystem}")
     }
   }
 }

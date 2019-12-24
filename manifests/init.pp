@@ -3,9 +3,8 @@
 # Puppet module to install, deploy and configure influxdb.
 #
 class influxdb (
-  Variant[Boolean, Enum['latest']] $package = true,
-  Variant[Boolean, Enum['running']] $service = true,
-  Boolean $enable          = true,
+  Enum['present', 'latest', 'purged'] $package_ensure = 'present',
+  Enum['running', 'stopped'] $service_ensure = 'running',
   Boolean $manage_repo     = true,
   $apt_location            = 'https://repos.influxdata.com/debian',
   $apt_release             = undef,
@@ -41,20 +40,6 @@ class influxdb (
   $graphite_templates      = ['*.app env.service.resource.measurement', 'server'],
 
 ) inherits influxdb::params {
-  case $package {
-    true    : { $ensure_package = 'present' }
-    false   : { $ensure_package = 'purged' }
-    latest  : { $ensure_package = 'latest' }
-    default : { fail('package must be true, false or lastest') }
-  }
-
-  case $service {
-    true    : { $ensure_service = 'running' }
-    false   : { $ensure_service = 'stopped' }
-    running : { $ensure_service = 'running' }
-    default : { fail('service must be true, false or running') }
-  }
-
   if $manage_repo {
     class { 'influxdb::repos':
       apt_location          => $apt_location,
@@ -68,17 +53,23 @@ class influxdb (
   }
 
   package { $influxdb_package_name:
-    ensure => $ensure_package,
+    ensure => $package_ensure,
   }
 
   service { $influxdb_service_name:
-    ensure  => $ensure_service,
-    enable  => $enable,
+    ensure  => $service_ensure,
+    enable  => $service_ensure == 'running',
     require => Package[$influxdb_package_name],
   }
 
+  if $package_ensure == 'purged' {
+    $file_ensure = 'absent'
+  } else {
+    $file_ensure = 'file'
+  }
+
   file { '/etc/influxdb/influxdb.conf':
-    ensure  => $ensure_package,
+    ensure  => $file_ensure,
     owner   => 'root',
     group   => 'root',
     mode    => '0644',

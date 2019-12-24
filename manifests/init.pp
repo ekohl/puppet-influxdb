@@ -55,7 +55,7 @@ class influxdb (
     default : { fail('service must be true, false or running') }
   }
 
-  if ($manage_repo == true) {
+  if $manage_repo {
     class { 'influxdb::repos':
       apt_location          => $apt_location,
       apt_release           => $apt_release,
@@ -72,16 +72,13 @@ class influxdb (
   }
 
   service { $influxdb_service_name:
-    ensure     => $ensure_service,
-    enable     => $enable,
-    hasrestart => true,
-    hasstatus  => true,
-    require    => Package[$influxdb_package_name],
+    ensure  => $ensure_service,
+    enable  => $enable,
+    require => Package[$influxdb_package_name],
   }
 
   file { '/etc/influxdb/influxdb.conf':
     ensure  => $ensure_package,
-    path    => '/etc/influxdb/influxdb.conf',
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
